@@ -3,7 +3,7 @@ name: iOS Build
 on:
   push:
     branches: [main]
-  workflow_dispatch:   # ручной запуск из вкладки Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,23 +15,23 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install dependencies
-        - run: npm install
+        run: npm install
 
-      - name: Build web + Capacitor
-        run: |
-          npm run build   # если есть сборка
-          npx cap sync ios
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
+        run: sudo xcode-select -s /Applications/Xcode_16.app || sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Build iOS (без подписи, для проверки)
+      - name: Build iOS (simulator, no signing)
         run: |
           cd ios/App
-          xcodebuild -scheme App \
+          xcodebuild \
+            -scheme App \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
-            build CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            build
