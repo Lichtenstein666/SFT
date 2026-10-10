@@ -21,7 +21,7 @@ jobs:
         run: npm install
 
       - name: Sync Capacitor iOS
-        run: npx cap sync ios
+        run: node node_modules/@capacitor/cli/bin/capacitor sync ios
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.app || sudo xcode-select -s /Applications/Xcode.app
