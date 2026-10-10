@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовый трекер</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Финансовый трекер</h1>
+            <p class="subtitle">Управление личными финансами</p>
+
+            <!-- Переключатель профилей -->
+            <div class="profile-switcher">
+                <button class="profile-current" id="profileCurrentBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="profile-avatar" id="profileAvatar">Л</span>
+                    <span class="profile-name" id="profileNameLabel">Личный</span>
+                    <svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown" role="listbox" hidden>
+                    <div class="profile-dropdown-list" id="profileList"></div>
+                    <div class="profile-dropdown-actions">
+                        <button type="button" class="profile-action-btn" id="addProfileBtn">+ Новый профиль</button>
+                        <button type="button" class="profile-action-btn profile-action-manage" id="manageProfilesBtn">Управление</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Навигация -->
+        <nav class="main-nav">
+            <button class="nav-btn active" data-section="overview">Обзор</button>
+            <button class="nav-btn" data-section="statistics">Статистика</button>
+            <button class="nav-btn" data-section="transactions">Транзакции</button>
+            <button class="nav-btn" data-section="categories">Категории</button>
+            <button class="nav-btn" data-section="cash">Наличные</button>
+        </nav>
+
+        <div class="sections-viewport" id="sectionsViewport">
+
+        <!-- Секция: Обзор -->
+        <div class="section active" id="overview-section">
+            <section class="upload-section">
+                <h2>Импорт данных</h2>
+                <div class="upload-area">
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+                    <label for="fileInput" class="upload-label">
+                        <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span class="upload-text">Выберите файл или перетащите сюда</span>
+                        <span class="file-types">CSV, Excel</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="stats-section" id="statsSection">
+                <h2>Финансовая сводка</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Доходы</div>
+                        <div class="stat-value income" id="totalIncome">0 ₽</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Расходы</div>
+                        <div class="stat-value expense" id="totalExpense">0 ₽</div>
+                    </div>
+                    <div class="stat-card stat-card-editable">
+                        <button type="button" class="stat-card-edit" id="editBalanceBtn" title="Изменить баланс" aria-label="Изменить баланс">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                        <div class="stat-label">Баланс счета</div>
+                        <div class="stat-value" id="balance">0 ₽</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Наличные</div>
+                        <div class="stat-value" id="cashBalance">0 ₽</div>
+                    </div>
+                    <div class="stat-card stat-card-debt stat-card-editable" id="debtCard" hidden>
+                        <button type="button" class="stat-card-edit" id="editDebtBtn" title="Изменить долг" aria-label="Изменить долг">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                        <div class="stat-label">Долг</div>
+                        <div class="stat-value expense" id="totalDebt">0 ₽</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="categories-overview" id="categoriesOverview">
+                <h2>Расходы по категориям</h2>
+                <div class="categories-grid" id="categoriesGrid"></div>
+            </section>
+        </div>
+
+        <!-- Секция: Транзакции -->
+        <div class="section" id="transactions-section">
+            <section class="transactions-header">
+                <div class="section-title-row">
+                    <h2>Транзакции</h2>
+                    <button class="btn-primary" id="addTransactionBtn">+ Добавить</button>
+                </div>
+                
+                <div class="filters">
+                    <select id="filterCategory" class="filter-select">
+                        <option value="all">Все категории</option>
+                    </select>
+                    <select id="filterType" class="filter-select">
+                        <option value="all">Все типы</option>
+                        <option value="income">Доходы</option>
+                        <option value="expense">Расходы</option>
+                    </select>
+                    <select id="filterPaymentMethod" class="filter-select">
+                        <option value="all">Все способы оплаты</option>
+                        <option value="card">Карта</option>
+                        <option value="cash">Наличные</option>
+                    </select>
+                </div>
+            </section>
+
+            <div class="transactions-list" id="transactionsList"></div>
+        </div>
+
+        <!-- Секция: Категории -->
+        <div class="section" id="categories-section">
+            <section>
+                <div class="section-title-row">
+                    <h2>Управление категориями</h2>
+                    <button class="btn-primary" id="addCategoryBtn">+ Добавить категорию</button>
+                </div>
+
+                <div class="categories-management">
+                    <div class="category-type-tabs">
+                        <button class="tab-btn active" data-type="expense">Расходы</button>
+                        <button class="tab-btn" data-type="income">Доходы</button>
+                    </div>
+
+                    <div class="categories-list" id="categoriesList"></div>
+                </div>
+            </section>
+        </div>
+        
+<!-- Секция: Статистика -->
+        <div class="section" id="statistics-section">
+            <section>
+                <div class="section-title-row">
+                    <h2>График движения средств</h2>
+                </div>
+                <div class="chart-type-tabs" id="chartTypeTabs">
+                    <button type="button" class="chart-tab-btn active" data-chart="overview">Общий</button>
+                    <button type="button" class="chart-tab-btn" data-chart="detailed">Детальный</button>
+                </div>
+
+                <!-- Общий график -->
+                <div class="chart-panel active" id="chartPanelOverview">
+                    <p class="chart-subtitle">Баланс карты, наличные, доходы и расходы</p>
+                    <div class="chart-container" id="overviewChartContainer">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Детальный график -->
+                <div class="chart-panel" id="chartPanelDetailed">
+                    <p class="chart-subtitle">Динамика по выбранным категориям</p>
+                    <div class="chart-category-filters" id="chartCategoryFilters">
+                        <div class="chart-filter-row">
+                            <select id="chartFilterType" class="filter-select">
+                                <option value="expense">Расходы</option>
+                                <option value="income">Доходы</option>
+                                <option value="all">Все типы</option>
+                            </select>
+                            <button type="button" class="btn-secondary btn-sm" id="chartSelectAllCats">Все</button>
+                            <button type="button" class="btn-secondary btn-sm" id="chartClearCats">Сбросить</button>
+                        </div>
+                        <div class="chart-category-chips" id="chartCategoryChips"></div>
+                    </div>
+                    <div class="chart-container" id="detailedChartContainer">
+                        <canvas id="detailedChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Секция: Наличные -->
+        <div class="section" id="cash-section">
+            <section>
+                <h2>Управление наличными</h2>
+                
+                <div class="cash-balance-card">
+                    <div class="cash-balance-label">Текущий баланс наличных</div>
+                    <div class="cash-balance-value" id="cashBalanceDisplay">0 ₽</div>
+                </div>
+
+                <div class="cash-actions">
+                    <button class="btn-secondary" id="addCashBtn">+ Пополнить</button>
+                    <button class="btn-secondary" id="withdrawCashBtn">− Снять</button>
+                </div>
+
+                <h3>История операций с наличными</h3>
+                <div class="cash-history" id="cashHistory"></div>
+            </section>
+        </div>
+        </div><!-- /.sections-viewport -->
+    </div><!-- /.container -->
+
+    <!-- Модальное окно: Новый / переименовать профиль -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="profileModalTitle">Новый профиль</h3>
+                <button class="modal-close" id="closeProfileModal">&times;</button>
+            </div>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>Название профиля</label>
+                    <input type="text" id="profileNameInput" placeholder="Например: Дебетовая, Кредитка" required maxlength="40">
+                </div>
+                <div class="form-group">
+                    <label>Тип счёта</label>
+                    <select id="profileTypeInput">
+                        <option value="debit">Дебетовый</option>
+                        <option value="credit">Кредитный</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelProfile">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Управление профилями -->
+    <div class="modal" id="profilesManageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Управление профилями</h3>
+                <button class="modal-close" id="closeProfilesManageModal">&times;</button>
+            </div>
+            <div class="profiles-manage-list" id="profilesManageList"></div>
+            <div class="modal-actions" style="padding: 0 24px 24px;">
+                <button type="button" class="btn-secondary" id="closeProfilesManageBtn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Изменить долг -->
+    <div class="modal" id="editDebtModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Изменить долг</h3>
+                <button class="modal-close" id="closeEditDebtModal">&times;</button>
+            </div>
+            <form id="editDebtForm">
+                <div class="form-group">
+                    <label>Сумма долга</label>
+                    <input type="number" id="debtInput" step="0.01" min="0" required>
+                </div>
+                <p style="color: var(--color-text-secondary); font-size: 0.875em; margin: -8px 0 16px;">
+                    Укажите актуальный долг по кредитке. Дальнейшие расходы и погашения будут учитываться от этой суммы.
+                </p>
+                <div class="modal-actions" style="flex-wrap: wrap;">
+                    <button type="button" class="btn-secondary" id="openPayDebtFromEdit">Погасить с другого счёта</button>
+                    <button type="button" class="btn-secondary" id="cancelEditDebt">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Погашение долга с другого счёта -->
+    <div class="modal" id="payDebtModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Погасить долг</h3>
+                <button class="modal-close" id="closePayDebtModal">&times;</button>
+            </div>
+            <form id="payDebtForm">
+                <div class="form-group">
+                    <label>Счёт списания (дебетовый)</label>
+                    <select id="payDebtSourceProfile" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Сумма погашения</label>
+                    <input type="number" id="payDebtAmount" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input type="date" id="payDebtDate" required>
+                </div>
+                <p class="pay-debt-hint" id="payDebtHint" style="color: var(--color-text-secondary); font-size: 0.875em; margin: -8px 0 16px;"></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelPayDebt">Отмена</button>
+                    <button type="submit" class="btn-primary">Погасить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Добавить транзакцию -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="transactionModalTitle">Добавить транзакцию</h3>
+                <button class="modal-close" id="closeTransactionModal">&times;</button>
+            </div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label>Описание</label>
+                    <input type="text" id="transactionDescription" required>
+                </div>
+                <div class="form-group">
+                    <label>Сумма</label>
+                    <input type="number" id="transactionAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input type="date" id="transactionDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select id="transactionType" required>
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Категория</label>
+                    <select id="transactionCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Способ оплаты</label>
+                    <select id="transactionPaymentMethod" required>
+                        <option value="card">Карта</option>
+                        <option value="cash">Наличные</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelTransaction">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Добавить категорию -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Добавить категорию</h3>
+                <button class="modal-close" id="closeCategoryModal">&times;</button>
+            </div>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label>Название категории</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select id="categoryType" required>
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ключевые слова (через запятую)</label>
+                    <input type="text" id="categoryKeywords" placeholder="магазин, супермаркет, продукты">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelCategory">Отмена</button>
+                    <button type="submit" class="btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Операции с наличными -->
+    <div class="modal" id="cashModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="cashModalTitle">Пополнить наличные</h3>
+                <button class="modal-close" id="closeCashModal">&times;</button>
+            </div>
+            <form id="cashForm">
+                <div class="form-group">
+                    <label>Сумма</label>
+                    <input type="number" id="cashAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <input type="text" id="cashDescription" placeholder="Комментарий (необязательно)">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelCash">Отмена</button>
+                    <button type="submit" class="btn-primary">Подтвердить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
